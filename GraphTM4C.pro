@@ -18,10 +18,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    tcp_client.cpp \
     udp_client.cpp
 
 HEADERS += \
     mainwindow.h \
+    tcp_client.h \
     udp_client.h
 
 FORMS += \
