@@ -8,28 +8,26 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    initUI();
 
     /* Scan for local ip address */
-    MainWindow::scan_local_interface();
+    scanLocalInterface();
 
     /* Initialization of UDP Client */
-    connect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::TCP_ping_device);
+    connect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::onTcpClientButtonClicked);
 
     if (udp_client == nullptr)
     {
-        udp_client = new UDP_Client();
+        udp_client = new UDP_Client;
     }
 
     /* Initialization of TCP Client */
     if (tcp_client == nullptr)
     {
-        tcp_client = new TCP_client();
+        tcp_client = new TCP_client;
     }
 
 
-
-    ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdNumber->setMinimumHeight(48);
 }
 
 MainWindow::~MainWindow()
@@ -37,7 +35,17 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::scan_local_interface()
+void MainWindow::initUI()
+{
+    ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
+    ui->lcdNumber->setMinimumHeight(48);
+    ui->statusbar->setStyleSheet("QStatusBar{padding-left:8px;background:rgba(214,214,214,125);"
+                                 "color:rgba(127,127,127,255);"
+                                 "font-weight: bold;"
+                                 "font-size: 12px}");
+}
+
+void MainWindow::scanLocalInterface()
 {
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
     for (int i = 0; i < interfaces.count(); i++)
@@ -55,19 +63,90 @@ void MainWindow::scan_local_interface()
 }
 
 
-void MainWindow::TCP_ping_device() 
+/************************************************
+ *
+ * TCP CLIENT
+ *
+ ***********************************************/
+
+void MainWindow::onTcpClientButtonClicked()
 {
+    disconnect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::onTcpClientButtonClicked);
 
-    QString local_ip = ui->interface_combo_box->currentText();
+    /* Change UI */
+    ui->open_connection_btn->setText("CLOSE");  // TODO add logic to handle close port
+    ui->statusbar->showMessage("Opening TCP Port... ");
+
+    /* Logic */
     QString ip_address = ui->ip_address_input->text();
-    QString port = ui->port_input->text();
-    connect(tcp_client, &TCP_client::set_udp_port, this, &MainWindow::connect_udp_target);
-    ui->statusbar->showMessage("Getting device info... ", 3000);
 
-    tcp_client->open_socket(ip_address);
+
+    connect(tcp_client, &TCP_client::TCPClientConnected, this, &MainWindow::onTcpClientNewConnection);
+    connect(tcp_client, &TCP_client::TCPClientConnectionFailed, this, &MainWindow::onTcpClientTimeout);
+    tcp_client->connectTo(ip_address);
+
 }
 
-void MainWindow::connect_udp_target(quint16 port)
+
+/**
+ * @brief MainWindow::onTcpClientNewConnection
+ * @param from
+ * @param port
+ */
+void MainWindow::onTcpClientNewConnection(const QString &from, quint16 port)
+{
+    ui->statusbar->showMessage("Established Connection To " + from + ":" + QString::number(port), 5000);
+
+    // Connect to a slot to listen to a response
+    connect(tcp_client, &TCP_client::TCPClientNewMessage, this, &MainWindow::onTcpClientNewMessage);
+    connect(ui->open_connection_btn, SIGNAL(clicked()), this, SLOT(onTcpClientDisconnectButtonClicked()));
+    // Sending a ping message to Tiva
+    tcp_client->sendMessage("Ping");
+}
+
+
+
+void MainWindow::onTcpClientDisconnectButtonClicked()
+{
+    qDebug() << "Disconnect btn clicked";
+    tcp_client->abortConnection();
+}
+
+
+void MainWindow::onTcpClientNewMessage(const QString &from, const QString &message)
+{
+    disconnect(tcp_client, &TCP_client::TCPClientNewMessage, this, &MainWindow::onTcpClientNewMessage);
+
+    qDebug() << "[MAIN]Received: " << message << "From: " << from;
+
+
+    // Handle Message
+}
+
+
+void MainWindow::onTcpClientTimeout()
+{
+    disconnect(tcp_client, &TCP_client::TCPClientConnected, this, &MainWindow::onTcpClientNewConnection);
+    disconnect(tcp_client, &TCP_client::TCPClientConnectionFailed, this, &MainWindow::onTcpClientTimeout);
+    disconnect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::onTcpClientDisconnectButtonClicked);
+
+    /* Hanndle UI */
+    ui->statusbar->showMessage("Connection Timeout", 3000);
+    ui->open_connection_btn->setText("OPEN");
+
+
+    /* Logic */
+    tcp_client->closeClient();
+    connect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::onTcpClientButtonClicked);
+
+}
+
+
+/**
+ * @brief MainWindow::onUdpConnected
+ * @param port target UDP port
+ */
+void MainWindow::onUdpConnected(quint16 port)
 {
     QString local_ip = ui->interface_combo_box->currentText();
     ui->port_input->setText(QString::number(port));
@@ -76,24 +155,16 @@ void MainWindow::connect_udp_target(quint16 port)
     udp_client->bind_port(local_ip, port);
     connect(udp_client, &UDP_Client::udp_packet_available, this, &MainWindow::display_data);
 
-    ui->port_input->setDisabled(true);
-    disconnect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::TCP_ping_device);
-
-
-    /* prepare button to close all connection */
-    ui->open_connection_btn->setText("CLOSE");
-    connect(ui->open_connection_btn, &QPushButton::clicked, this, [this] {
-        this->tcp_client->closeSocketConnection();
-        this->udp_client->closeUDP();
-        disconnect(tcp_client, &TCP_client::set_udp_port, this, &MainWindow::connect_udp_target);
-
-        ui->port_input->setDisabled(false);
-        connect(ui->open_connection_btn, &QPushButton::clicked, this, &MainWindow::TCP_ping_device);
-
-        ui->open_connection_btn->setText("OPEN");
-    });
 }
 
+
+
+
+/***************************************************
+ *
+ * GRAPHING
+ *
+ ***************************************************/
 void MainWindow::display_data(const QString &message)
 {
     QStringList result = message.split(",");

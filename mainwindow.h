@@ -18,13 +18,21 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void display_data(const QString &message);
-    void scan_local_interface();
-    void TCP_ping_device();
+    void scanLocalInterface();
+
     
 public slots:
-    void connect_udp_target(quint16 port);
+    void onUdpConnected(quint16 port);
+    void onTcpClientButtonClicked();
+    void onTcpClientDisconnectButtonClicked();
+    void onTcpClientNewConnection(const QString &from, quint16 port);
+    void onTcpClientTimeout();
+    void onTcpClientNewMessage(const QString &from, const QString &message);
+
 private:
     Ui::MainWindow *ui;
+    void initUI();
+
     UDP_Client* udp_client = nullptr;
     TCP_client* tcp_client = nullptr;
 };

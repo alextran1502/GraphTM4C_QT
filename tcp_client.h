@@ -3,29 +3,36 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QHostAddress>
 #include <QDebug>
+#include <QAbstractSocket>
 
 class TCP_client : public QObject
 {
     Q_OBJECT
 public:
     explicit TCP_client(QObject *parent = nullptr);
-    void open_socket(QString ip_addr);
-
+    void connectTo(QString ip_addr);
+    void sendMessage(QString string);
+    void disconnectCurrentConnection();
+    void closeClient();
+    void abortConnection();
 
 signals:
-    void set_udp_port(quint16 port);
-
+    void TCPClientNewMessage(const QString &from, const QString &message);
+    void TCPClientConnected(const QString &from, quint16 port);
+    void TCPCLientDisconnected();
+    void TCPClientConnectionFailed();
 
 public slots:
     void onConnected();
     void onDisconnected();
-    void bytesWritten(qint64 bytes);
-    void readyRead();
-    void closeSocketConnection();
+    void messageReady();
+    void onStateChanged(QAbstractSocket::SocketState state);
 
 private:
     QTcpSocket *tcp_socket;
+    QByteArray array;
 };
 
 #endif // TCP_CLIENT_H
