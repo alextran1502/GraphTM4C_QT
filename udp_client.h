@@ -10,6 +10,7 @@ class UDP_Client : public QObject
 public:
     explicit UDP_Client(QObject *parent = nullptr);
     bool bind_port(QString ip_address, quint16 port);
+    void closeUDP();
 
 signals:
     void udp_packet_available(const QString msg);

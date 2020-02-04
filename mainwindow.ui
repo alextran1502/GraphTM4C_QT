@@ -17,7 +17,7 @@
    <bool>false</bool>
   </property>
   <property name="styleSheet">
-   <string notr="true">font: 63 11pt &quot;Overpass SemiBold&quot;;</string>
+   <string notr="true">font: 11pt &quot;DejaVu Sans&quot;;</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -33,9 +33,9 @@
         </property>
         <property name="font">
          <font>
-          <family>Overpass SemiBold</family>
+          <family>DejaVu Sans</family>
           <pointsize>11</pointsize>
-          <weight>7</weight>
+          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -101,7 +101,7 @@
            </size>
           </property>
           <property name="text">
-           <string>10.1.6.134</string>
+           <string>10.91.184.169</string>
           </property>
          </widget>
         </item>
@@ -115,7 +115,7 @@
         <item row="2" column="1">
          <widget class="QLineEdit" name="port_input">
           <property name="text">
-           <string>2283</string>
+           <string>port</string>
           </property>
          </widget>
         </item>
@@ -135,7 +135,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="open_udp_btn">
+           <widget class="QPushButton" name="open_connection_btn">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -180,11 +180,21 @@
      <x>0</x>
      <y>0</y>
      <width>975</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="font">
+    <font>
+     <family>DejaVu Sans</family>
+     <pointsize>11</pointsize>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -19,9 +19,10 @@ public:
     ~MainWindow();
     void display_data(const QString &message);
     void scan_local_interface();
-
+    void TCP_ping_device();
+    
 public slots:
-    void connect_udp_target();
+    void connect_udp_target(quint16 port);
 private:
     Ui::MainWindow *ui;
     UDP_Client* udp_client = nullptr;

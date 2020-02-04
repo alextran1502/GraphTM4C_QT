@@ -22,6 +22,12 @@ bool UDP_Client::bind_port(QString ip_address, quint16 port)
     return is_bind;
 }
 
+void UDP_Client::closeUDP()
+{
+    udp_socket->abort();
+    disconnect(udp_socket, &QUdpSocket::readyRead, this, &UDP_Client::ready_read);
+}
+
 void UDP_Client::ready_read()
 {
     QByteArray buffer;
