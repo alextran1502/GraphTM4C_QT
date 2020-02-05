@@ -2,12 +2,12 @@
 
 UDP_Client::UDP_Client(QObject *parent) : QObject(parent)
 {
-    udp_socket = new QUdpSocket(this);
+
 }
 
 bool UDP_Client::bind_port(QString ip_address, quint16 port)
 {
-
+    udp_socket = new QUdpSocket(this);
     udp_socket->abort();
     bool is_bind = udp_socket->bind(QHostAddress(ip_address), port);
 

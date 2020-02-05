@@ -47,10 +47,10 @@
          <bool>false</bool>
         </property>
         <property name="digitCount">
-         <number>5</number>
+         <number>10</number>
         </property>
         <property name="segmentStyle">
-         <enum>QLCDNumber::Flat</enum>
+         <enum>QLCDNumber::Filled</enum>
         </property>
        </widget>
       </item>
@@ -101,7 +101,7 @@
            </size>
           </property>
           <property name="text">
-           <string>10.91.184.169</string>
+           <string>10.1.6.91</string>
           </property>
          </widget>
         </item>
@@ -160,6 +160,26 @@
      </layout>
     </item>
     <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QCustomPlot" name="plot" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>300</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -196,6 +216,14 @@
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

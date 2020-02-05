@@ -37,12 +37,24 @@ MainWindow::~MainWindow()
 
 void MainWindow::initUI()
 {
-    ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
-    ui->lcdNumber->setMinimumHeight(48);
+
+    ui->lcdNumber->setMinimumHeight(35);
     ui->statusbar->setStyleSheet("QStatusBar{padding-left:8px;background:rgba(214,214,214,125);"
                                  "color:rgba(127,127,127,255);"
                                  "font-weight: bold;"
                                  "font-size: 12px}");
+
+    ui->plot->addGraph();
+    ui->plot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
+
+    QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
+    timeTicker->setTimeFormat("%h:%m:%s");
+    ui->plot->xAxis->setTicker(timeTicker);
+    ui->plot->axisRect()->setupFullAxesBox();
+    ui->plot->yAxis->setRange(-50, 50);
+    connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->plot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(ui->plot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->plot->yAxis2, SLOT(setRange(QCPRange)));
+
 }
 
 void MainWindow::scanLocalInterface()
@@ -109,6 +121,7 @@ void MainWindow::onTcpClientDisconnectButtonClicked()
 {
     disconnect(ui->open_connection_btn, SIGNAL(clicked()), this, SLOT(onTcpClientDisconnectButtonClicked()));
     tcp_client->abortConnection();
+    udp_client->closeUDP();
 }
 
 
@@ -163,7 +176,8 @@ void MainWindow::onUdpConnected(quint16 port)
  *************************************************/
 void MainWindow::handleTcpPacket(const QString &TcpPacket)
 {
-    qDebug() << "Handled: " << TcpPacket;
+        QString local_ip = ui->interface_combo_box->currentText();
+        qDebug() << "Handled: " << TcpPacket;
         /* Convert to JSON */
         QString data = TcpPacket;
         QJsonDocument tcp_json = QJsonDocument::fromJson(data.toUtf8());
@@ -176,7 +190,10 @@ void MainWindow::handleTcpPacket(const QString &TcpPacket)
             qWarning() << "Wrong Port: " << target_udp_port;
         } else {
             qDebug() << "Port" << target_udp_port;
-//            emit set_udp_port(target_udp_port);
+
+            connect(udp_client, &UDP_Client::udp_packet_available, this, &MainWindow::display_data);
+            udp_client->bind_port(local_ip, target_udp_port);
+
         }
 }
 
@@ -188,7 +205,26 @@ void MainWindow::handleTcpPacket(const QString &TcpPacket)
 void MainWindow::display_data(const QString &message)
 {
     QStringList result = message.split(",");
-    double voltage = ((result.value(1).toDouble() / 32768) - 1) * 25;
+    double voltage = ((result.value(1).toDouble() / 8388608) - 1) * 25;
+    double accleration = voltage / 0.0052;
+    ui->lcdNumber->display(accleration);
 
-    ui->lcdNumber->display(voltage);
+    // Plot
+    static QTime time(QTime::currentTime());
+    double key = time.elapsed()/1000.0;
+
+    ui->plot->graph(0)->addData(key, accleration);
+
+    ui->plot->yAxis->setRange(-50, 50);
+    ui->plot->graph(0)->rescaleValueAxis(false, true);
+//    double minrangeLine = *std::min_element(linenb.begin(),linenb.end());
+//    double maxrangeLine = *std::max_element(linenb.begin(),linenb.end());
+//    ui->plot->axisRect(0)->axis(QCPAxis::atLeft)->rescale();
+
+
+    ui->plot->xAxis->setRange(key, 8, Qt::AlignRight);
+    ui->plot->replot();
+
+
+
 }

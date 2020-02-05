@@ -1,6 +1,6 @@
 QT       += core gui
 QT       += network
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++11
 
@@ -18,11 +18,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    qcustomplot.cpp \
     tcp_client.cpp \
     udp_client.cpp
 
 HEADERS += \
     mainwindow.h \
+    qcustomplot.h \
     tcp_client.h \
     udp_client.h
 
