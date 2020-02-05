@@ -5,6 +5,8 @@
 #include "udp_client.h"
 #include "tcp_client.h"
 #include <QNetworkInterface>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,7 +21,7 @@ public:
     ~MainWindow();
     void display_data(const QString &message);
     void scanLocalInterface();
-
+    void handleTcpPacket(const QString &TcpPacket);
     
 public slots:
     void onUdpConnected(quint16 port);

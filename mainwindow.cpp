@@ -105,22 +105,21 @@ void MainWindow::onTcpClientNewConnection(const QString &from, quint16 port)
 }
 
 
-
 void MainWindow::onTcpClientDisconnectButtonClicked()
 {
-    qDebug() << "Disconnect btn clicked";
+    disconnect(ui->open_connection_btn, SIGNAL(clicked()), this, SLOT(onTcpClientDisconnectButtonClicked()));
     tcp_client->abortConnection();
 }
 
 
 void MainWindow::onTcpClientNewMessage(const QString &from, const QString &message)
 {
+    Q_UNUSED(from)
+
     disconnect(tcp_client, &TCP_client::TCPClientNewMessage, this, &MainWindow::onTcpClientNewMessage);
 
-    qDebug() << "[MAIN]Received: " << message << "From: " << from;
-
-
     // Handle Message
+    handleTcpPacket(message);
 }
 
 
@@ -157,8 +156,29 @@ void MainWindow::onUdpConnected(quint16 port)
 
 }
 
+/**************************************************
+ *
+ * MainWindow Logic
+ *
+ *************************************************/
+void MainWindow::handleTcpPacket(const QString &TcpPacket)
+{
+    qDebug() << "Handled: " << TcpPacket;
+        /* Convert to JSON */
+        QString data = TcpPacket;
+        QJsonDocument tcp_json = QJsonDocument::fromJson(data.toUtf8());
+        QJsonObject tcp_received_data = tcp_json.object();
 
+        quint16 target_udp_port = quint16(tcp_received_data["openUdpPort"].toInt());
 
+        /* Emit */
+        if (target_udp_port != 2283) {
+            qWarning() << "Wrong Port: " << target_udp_port;
+        } else {
+            qDebug() << "Port" << target_udp_port;
+//            emit set_udp_port(target_udp_port);
+        }
+}
 
 /***************************************************
  *
