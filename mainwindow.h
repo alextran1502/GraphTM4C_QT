@@ -34,7 +34,7 @@ public slots:
 private:
     Ui::MainWindow *ui;
     void initUI();
-
+    quint64 dataPoint = 0;
     UDP_Client* udp_client = nullptr;
     TCP_client* tcp_client = nullptr;
 };

@@ -44,14 +44,32 @@ void MainWindow::initUI()
                                  "font-weight: bold;"
                                  "font-size: 12px}");
 
+
+    // PLOT
+    ui->plot->legend->setVisible(true);
     ui->plot->addGraph();
     ui->plot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
+    ui->plot->graph(0)->setName("CH1");
+
+    ui->plot->addGraph(ui->plot->xAxis2, ui->plot->yAxis2);
+    ui->plot->graph(1)->setPen(QPen(Qt::red));
+    ui->plot->graph(1)->setName("CH2");
+    ui->plot->xAxis2->setVisible(true);
+    ui->plot->yAxis2->setVisible(true);
+    ui->plot->yAxis2->setTickLength(3, 3);
+    ui->plot->yAxis2->setSubTickLength(1, 1);
+    ui->plot->yAxis2->setRange(0, 100000);
+
+    ui->plot->xAxis->setLabel("Bottom axis with outward ticks");
+    ui->plot->yAxis->setLabel("Left axis label");
+    ui->plot->xAxis2->setLabel("Top axis label");
+    ui->plot->yAxis2->setLabel("Right axis label");
+
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     timeTicker->setTimeFormat("%h:%m:%s");
     ui->plot->xAxis->setTicker(timeTicker);
     ui->plot->axisRect()->setupFullAxesBox();
-    ui->plot->yAxis->setRange(-50, 50);
     connect(ui->plot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->plot->xAxis2, SLOT(setRange(QCPRange)));
     connect(ui->plot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->plot->yAxis2, SLOT(setRange(QCPRange)));
 
@@ -204,27 +222,27 @@ void MainWindow::handleTcpPacket(const QString &TcpPacket)
  ***************************************************/
 void MainWindow::display_data(const QString &message)
 {
+    dataPoint++;
     QStringList result = message.split(",");
-    double voltage = ((result.value(1).toDouble() / 8388608) - 1) * 25;
-    double accleration = voltage / 0.0052;
-    ui->lcdNumber->display(accleration);
+    double voltage2 = 0;
 
-    // Plot
-    static QTime time(QTime::currentTime());
-    double key = time.elapsed()/1000.0;
+    if(result.value(0) == "CH1")
+    {
+        double voltage = ((result.value(1).toDouble() / 8388608) - 1) * 25;
+        ui->lcdNumber->display(voltage);
 
-    ui->plot->graph(0)->addData(key, accleration);
-
-    ui->plot->yAxis->setRange(-50, 50);
-    ui->plot->graph(0)->rescaleValueAxis(false, true);
-//    double minrangeLine = *std::min_element(linenb.begin(),linenb.end());
-//    double maxrangeLine = *std::max_element(linenb.begin(),linenb.end());
-//    ui->plot->axisRect(0)->axis(QCPAxis::atLeft)->rescale();
-
-
-    ui->plot->xAxis->setRange(key, 8, Qt::AlignRight);
-    ui->plot->replot();
-
+        ui->dataPoint->setText(QString::number(dataPoint));
+        // Plot
+        static QTime time(QTime::currentTime());
+        double key = time.elapsed()/1000.0;
+        ui->plot->graph(0)->addData(key, voltage);
+        ui->plot->graph(0)->rescaleValueAxis(false, true);
+        ui->plot->replot();
+        ui->plot->graph(1)->addData(key, dataPoint);
+        ui->plot->graph(1)->rescaleValueAxis(false, true);
+        ui->plot->xAxis->setRange(key, 8, Qt::AlignRight);
+        ui->plot->replot();
+    }
 
 
 }
